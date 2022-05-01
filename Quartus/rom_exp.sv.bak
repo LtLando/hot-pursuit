@@ -1,0 +1,37 @@
+/*
+ * ECE385-HelperTools/PNG-To-Txt
+ * Author: Rishi Thakkar
+ *
+ */
+
+module rom_exp
+(
+		input [18:0] read_address,
+		input Clk,
+
+		output logic [23:0] data_out
+);
+
+// mem has width of 3 bits and a total of 8320 addresses
+logic [2:0] mem [0:8319];
+
+initial
+begin
+	 $readmemh("rom_explosion_txt.txt", mem);
+end
+
+
+always_ff @ (posedge Clk) begin
+	unique case (mem[read_address])
+		3'd0: data_out <= 24'hffffff;
+		3'd1: data_out <= 24'hee3526;
+		3'd2: data_out <= 24'hffeb45;
+		3'd3: data_out <= 24'h000000;
+		3'd4: data_out <= 24'hebb665;
+		3'd5: data_out <= 24'h9b9d9e;
+		3'd6: data_out <= 24'hb80a05;
+		3'd7: data_out <= 24'h4c0604;
+	endcase
+end
+
+endmodule

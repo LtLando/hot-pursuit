@@ -1,0 +1,37 @@
+/*
+ * ECE385-HelperTools/PNG-To-Txt
+ * Author: Rishi Thakkar
+ *
+ */
+
+module rom_barrel
+(
+		input [18:0] read_address,
+		input Clk,
+
+		output logic [23:0] data_out
+);
+
+// mem has width of 3 bits and a total of 8320 addresses
+logic [2:0] mem [0:8319];
+
+initial
+begin
+	 $readmemh("rom_barrel_txt.txt", mem);
+end
+
+
+always_ff @ (posedge Clk) begin
+	unique case (mem[read_address])
+		3'd0: data_out <= 24'hffffff;
+		3'd1: data_out <= 24'h184110;
+		3'd2: data_out <= 24'h60a639;
+		3'd3: data_out <= 24'h97c93d;
+		3'd4: data_out <= 24'h8fc33c;
+		3'd5: data_out <= 24'h49007e;
+		3'd6: data_out <= 24'hcda02b;
+		3'd7: data_out <= 24'h7e5125;
+	endcase
+end
+
+endmodule

@@ -1,0 +1,91 @@
+module objects ( input Reset, frame_clk,
+					input [7:0] keycode,
+               output [9:0]  CarX, CarY, CarS);
+    
+    logic [9:0] Car_X_Pos, Car_X_Motion, Car_Y_Pos, Car_Y_Motion, Car_Size, Car_Width, Car_Height;
+	 
+    parameter [9:0] Car_X_Start=319;  // Start position on the X axis
+    parameter [9:0] Car_Y_Start=449;  // Start position on the Y axis
+    parameter [9:0] Car_X_Min=0;       // Leftmost point on the X axis
+    parameter [9:0] Car_X_Max=639;     // Rightmost point on the X axis
+    parameter [9:0] Car_Y_Min=0;       // Topmost point on the Y axis
+    parameter [9:0] Car_Y_Max=479;     // Bottommost point on the Y axis
+    parameter [9:0] Car_X_Step=1;      // Step size on the X axis
+    parameter [9:0] Car_Y_Step=1;      // Step size on the Y axis
+	 parameter [9:0] Lane_Shift=128;		// Lane shift size on X axis
+	 parameter [9:0] New_Lane=Car_X_Start;
+
+    assign Car_Width = 64;  
+	 assign Car_Height = 60;
+	 assign Car_Size = 4;
+   
+    always_ff @ (posedge Reset or posedge frame_clk )
+    begin: Move_Car
+        if (Reset)  // Asynchronous Reset
+        begin 
+            Car_Y_Motion <= 10'd0;
+				Car_X_Motion <= 10'd0;
+				Car_Y_Pos <= Car_Y_Start;
+				Car_X_Pos <= Car_X_Start;
+        end
+           
+        else 
+        begin 
+				 if ( (Car_Y_Pos + (Car_Height/2)) >= Car_Y_Max )  // Car is at the bottom edge, STOP!
+					  Car_Y_Motion <= (~ (Car_Y_Step) + 1'b1);  // 2's complement.
+					  
+				 else if ( (Car_Y_Pos - (Car_Height/2)) <= Car_Y_Min )  // Car is at the top edge, STOP!
+					  Car_Y_Motion <= Car_Y_Step;
+					  
+				  else if ( (Car_X_Pos + (Car_Width/2)) >= Car_X_Max )  // Car is at the Right edge, PASS THROUGH!
+					  Car_X_Pos <= Car_X_Min + (Car_Width/2);
+					  
+				 else if ( (Car_X_Pos - (Car_Width/2)) <= Car_X_Min )  // Ball is at the Left edge, PASS THROUGH!
+					  Car_X_Pos <= Car_X_Max - (Car_Width/2);
+		  
+				 else
+				 begin
+					  Car_Y_Motion <= Car_Y_Motion;  // Ball is somewhere in the middle, don't bounce, just keep moving
+					  
+				 
+				 case (keycode)
+					8'd80 : begin //left arrow
+								Car_X_Motion <= -2;
+								Car_Y_Motion <= 0;
+								if ((Car_X_Pos - 63) % Lane_Shift) New_Lane <= Car_X_Pos - Lane_Shift; //only assign new lane if in center of lane
+							  end
+					        
+					8'd79 : begin //right arrow
+								Car_X_Motion <= -2;
+								Car_Y_Motion <= 0;
+								if ((Car_X_Pos - 63) % Lane_Shift) New_Lane <= Car_X_Pos + Lane_Shift; //only assign new lane if in center of lane
+							  end
+							  
+					8'd21 : begin
+					        Car_Y_Motion <= 2;//R
+							 end
+							  
+					8'd10 : begin
+					        Car_Y_Motion <= -2;//G
+							 end	  
+					default: begin
+								if (Car_X_Pos == New_Lane) //keep moving if shifting lanes
+								begin
+									Car_Y_Motion <= 0;//Don't move
+									Car_X_Motion <= 0;
+								end
+			   endcase
+				end
+				 Car_Y_Pos <= (Car_Y_Pos + Car_Y_Motion);  // Update ball position
+				 Car_X_Pos <= (Car_X_Pos + Car_X_Motion);    
+		end  
+    end
+       
+    assign CarX = Car_X_Pos;
+   
+    assign CarY = Car_Y_Pos;
+	 
+	 assign CarS = Car_Size;
+    
+
+endmodule

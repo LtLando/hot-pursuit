@@ -1,0 +1,95 @@
+module stars ( input Reset, frame_clk,
+               output  StarX, StarY, StarW, StarH);
+    
+    logic signed [10:0] Obj_X_Pos [5], New_X_Pos, Obj_Y_Pos [5], Obj_Y_Motion [5], Obj_Width [5], Obj_Height [5];
+	 logic signed [4:0] exprdObjs;
+	 logic [7:0] whileCount;
+	 logic genX;
+	 
+	 assign Obj_Width[0] = 32; //rock
+	 assign Obj_Height[0] = 19;
+	 
+	 assign Obj_Width[1] = 64; //tree
+	 assign Obj_Height[1] = 57;
+	 
+	 assign Obj_Width[2] = 40; //barrel
+	 assign Obj_Height[2] = 42;
+	 
+	 parameter [10:0] Obj_Y_Start=0;     // Start position on Y axis
+    parameter [10:0] Obj_X_Min=0;       // Leftmost point on the X axis
+    parameter [10:0] Obj_X_Max=639;     // Rightmost point on the X axis
+    parameter [10:0] Obj_Y_Min=0;       // Topmost point on the Y axis
+    parameter [10:0] Obj_Y_Max=479;     // Bottommost point on the Y axis
+	 
+	 generateX generateX0 (.Clk(frame_clk),
+							 .en(genX),
+							 .out(New_X_Pos)
+							);
+   
+    always_ff @ (posedge Reset or posedge frame_clk )
+    begin: Move_Object
+        if (Reset)  // Asynchronous Reset
+        begin 
+				exprdObjs <= 5'b00000;
+				//genX <= 1'b0;
+				for (int i = 0; i < 3; i++)
+				begin
+					genX <= 1'b1; //generate new x position, cannot be same as another object
+					/*if (i > 1)
+					begin
+					for (int j = i - 1; j < i; j++)
+					begin
+					whileCount <= 0;
+						if (New_X_Pos == Obj_X_Pos[j] && whileCount < 250) //must terminate within 250 iterations
+						begin
+							genX <= 1'b1;
+							whileCount <= whileCount + 1;
+						end
+					end
+					end*/
+						
+					Obj_X_Pos[i] <= New_X_Pos - (Obj_Width[i]>>1);
+					//genX <= 1'b0;
+					Obj_Y_Pos[i] <= Obj_Y_Start;
+					Obj_Y_Motion[i] <= 11'd1;
+				end
+			end
+			
+			else if ((trshdObjs || exprdObjs) != 5'b00000)
+			begin
+				for (int i = 0; i < 3; i++)
+				begin
+					if (trshdObjs[i] || exprdObjs[i])
+						begin
+						genX <= 1'b1; //generate new x position
+						Obj_X_Pos[i] <= New_X_Pos - (Obj_Width[i]>>1);
+						Obj_Y_Pos[i] <= Obj_Y_Start;
+						Obj_Y_Motion[i] <= 11'd1;
+						exprdObjs[i] <= 1'b0;
+					end
+				end
+			end
+			
+		  else
+        begin 
+		  genX <= 1'b0;
+		  for (int i = 0; i < 3; i++)
+		   begin
+				 if ( (Obj_Y_Pos[i] + Obj_Height[i]) >= Obj_Y_Max )  // Object is at the bottom edge, TRASH IT!
+					  exprdObjs[i] <= 1'b1;
+
+				 Obj_Y_Pos[i] <= (Obj_Y_Pos[i] + Obj_Y_Motion[i]);  // Update objects' positions	
+			end
+		  end			
+    end
+       
+    assign ObjX = Obj_X_Pos;
+   
+    assign ObjY = Obj_Y_Pos;
+	 
+	 assign ObjW = Obj_Width;
+	 
+	 assign ObjH = Obj_Height;
+    
+
+endmodule

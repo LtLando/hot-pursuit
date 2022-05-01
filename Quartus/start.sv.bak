@@ -1,0 +1,52 @@
+module start (  input logic Clk, Reset,
+					 input logic [7:0] keycode,
+                output logic [7:0]  Red, Green, Blue,
+					 output logic start
+					);
+					
+	logic [16:0] start_addr;
+	logic [23:0] start_data;
+	logic start_on;
+	int unsigned startDistX, startDistY, Start_width, Start_height;
+	logic [10:0] StartX, StartY;
+					
+	rom_start rom22 (.read_address (start_addr),
+						.Clk (Clk),
+						.data_out (start_data)
+						);
+	  
+					
+	always_ff @ (posedge Reset or posedge Clk)
+    begin:stuff_on_proc	
+
+		if (Reset)
+		begin
+			start <= 1'b0;
+			start_addr <= 17'b0;
+			start_data <= 24'b0;
+		end
+		else
+		begin
+			startDistX <= DrawX - StartX;
+			startDistY <= DrawY - StartY;
+			start_on <= 1'b0;
+			Start_width <= 256;
+			Starbar_height <= 288;
+			StartX <= 320 - (Start_width>>1);
+			StartY <= 240 - (Start_height>>1);
+			
+			if (startDistX <= Start_width && startDistY <= Start_height)
+		  begin
+				start_on <= 1'b1;
+				start_addr <= (startDistY*Start_width) + startDistX;
+		  end
+		  
+		  if ((start_on) && (start_data != 24'hffffff))
+		  begin
+				Red = start_data[23:16];
+            Green = start_data[15:8];
+            Blue = start_data[7:0];
+		  end
+		end
+	end
+	

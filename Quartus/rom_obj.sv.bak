@@ -1,0 +1,42 @@
+/*
+ * ECE385-HelperTools/PNG-To-Txt
+ * Author: Rishi Thakkar
+ *
+ */
+
+module rom_car1
+(
+		input [18:0] read_address,
+		input Clk,
+
+		output logic [23:0] data_out
+);
+
+// mem has width of 3 bits and a total of 42600 addresses
+logic [2:0] mem [0:41599];
+//0-8319: 	   5 lives
+//8320-16639:  4 lives
+//16640-24959: 3 lives
+//24960-33279: 2 lives
+//33280-41599: 1 life
+
+initial
+begin
+	 $readmemh("rom_car1.txt", mem);
+end
+
+
+always_ff @ (posedge Clk) begin
+	unique case (mem[read_address])
+		3'd0: data_out <= 24'hffffff;
+		3'd1: data_out <= 24'he24a44;
+		3'd2: data_out <= 24'h4a455e;
+		3'd3: data_out <= 24'h732d29;
+		3'd4: data_out <= 24'hdfe2d1;
+		3'd5: data_out <= 24'h98a2cf;
+		3'd6: data_out <= 24'he3dea7;
+		3'd7: data_out <= 24'h000000;
+	endcase
+end
+
+endmodule

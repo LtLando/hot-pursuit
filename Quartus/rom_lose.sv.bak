@@ -1,0 +1,41 @@
+/*
+ * ECE385-HelperTools/PNG-To-Txt
+ * Author: Rishi Thakkar
+ *
+ */
+
+module rom_lose
+(
+		input [18:0] read_address,
+		input Clk,
+
+		output logic [23:0] data_out
+);
+
+// mem has width of 3 bits and a total of 299,280 addresses
+logic [2:0] mem [0:299279];
+//0-74,819:        0 stars
+//74,820-149,639:  1 star
+//149,640-224,459: 2 stars
+//224,460-299,249: 3 stars
+
+initial
+begin
+	 $readmemh("rom_lose_txt.txt", mem);
+end
+
+
+always_ff @ (posedge Clk) begin
+	unique case (mem[read_address])
+		3'd0: data_out <= 24'hffffff;
+		3'd1: data_out <= 24'h262828;
+		3'd2: data_out <= 24'hbd874e;
+		3'd3: data_out <= 24'h69441a;
+		3'd4: data_out <= 24'hbfbfbf;
+		3'd5: data_out <= 24'h9a9b9d;
+		3'd6: data_out <= 24'he9cfb8;
+		3'd7: data_out <= 24'h322d24;
+	endcase
+end
+
+endmodule
